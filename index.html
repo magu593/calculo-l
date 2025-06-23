@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Solucionador de Ecuaciones</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 20px auto;
+    }
+    canvas {
+      margin-top: 30px;
+    }
+    .output {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Solucionador de Ecuaciones Lineales y Cuadráticas</h2>
+  <p>Ingresa una ecuación en función de x (ej: <code>y = 2x + 1</code> o <code>y = x^2 - 4x + 3</code>)</p>
+  <input type="text" id="equation" placeholder="y = x^2 - 4x + 3" size="30"/>
+  <button onclick="graficar()">Graficar</button>
+
+  <div class="output" id="resultado"></div>
+
+  <canvas id="grafico" width="600" height="400"></canvas>
+
+  <script>
+    let chart = null;
+
+    function graficar() {
+      const eqInput = document.getElementById("equation").value;
+      const expr = eqInput.replace(/\s+/g, "").replace("y=", "");
+      const resultado = document.getElementById("resultado");
+
+      const xs = [], ys = [];
+      let minY = Infinity, maxY = -Infinity;
+
+      for (let x = -20; x <= 20; x += 0.5) {
+        try {
+          const scope = { x };
+          const y = eval(expr.replace(/\^/g, "**"));
+          xs.push(x);
+          ys.push(y);
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        } catch (err) {
+          resultado.innerHTML = "<span style='color: red;'>Error en la ecuación. Asegúrate de escribirla correctamente.</span>";
+          return;
+        }
+      }
+
+      const dominio = "Domino: [-20, 20]";
+      const rango = `Rango: [${minY.toFixed(2)}, ${maxY.toFixed(2)}]`;
+
+      resultado.innerHTML = `<strong>${dominio}</strong><br><strong>${rango}</strong>`;
+
+      if (chart) chart.destroy(); // Si ya hay un gráfico, lo borra
+
+      const ctx = document.getElementById("grafico").getContext("2d");
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: xs,
+          datasets: [{
+            label: eqInput,
+            data: ys,
+            fill: false,
+            borderWidth: 2,
+            pointRadius: 0,
+          }]
+        },
+        options: {
+          responsive: false,
+          scales: {
+            x: {
+              type: 'linear',
+              min: -20,
+              max: 20,
+              title: {
+                display: true,
+                text: 'x'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'y'
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
