@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Solucionador de Ecuaciones</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -36,29 +37,38 @@
       const expr = eqInput.replace(/\s+/g, "").replace("y=", "");
       const resultado = document.getElementById("resultado");
 
+      let parsedExpr;
+      try {
+        parsedExpr = math.parse(expr);
+      } catch (err) {
+        resultado.innerHTML = "<span style='color:red;'>Error en la ecuación. Asegúrate de escribirla correctamente.</span>";
+        return;
+      }
+
+      const code = parsedExpr.compile();
+
       const xs = [], ys = [];
       let minY = Infinity, maxY = -Infinity;
 
       for (let x = -20; x <= 20; x += 0.5) {
         try {
-          const scope = { x };
-          const y = eval(expr.replace(/\^/g, "**"));
+          const y = code.evaluate({ x });
           xs.push(x);
           ys.push(y);
           if (y < minY) minY = y;
           if (y > maxY) maxY = y;
         } catch (err) {
-          resultado.innerHTML = "<span style='color: red;'>Error en la ecuación. Asegúrate de escribirla correctamente.</span>";
+          resultado.innerHTML = "<span style='color:red;'>Error al evaluar la función.</span>";
           return;
         }
       }
 
-      const dominio = "Domino: [-20, 20]";
+      const dominio = "Dominio: [-20, 20]";
       const rango = `Rango: [${minY.toFixed(2)}, ${maxY.toFixed(2)}]`;
 
       resultado.innerHTML = `<strong>${dominio}</strong><br><strong>${rango}</strong>`;
 
-      if (chart) chart.destroy(); // Si ya hay un gráfico, lo borra
+      if (chart) chart.destroy();
 
       const ctx = document.getElementById("grafico").getContext("2d");
       chart = new Chart(ctx, {
@@ -68,9 +78,9 @@
           datasets: [{
             label: eqInput,
             data: ys,
-            fill: false,
             borderWidth: 2,
             pointRadius: 0,
+            fill: false
           }]
         },
         options: {
@@ -80,16 +90,10 @@
               type: 'linear',
               min: -20,
               max: 20,
-              title: {
-                display: true,
-                text: 'x'
-              }
+              title: { display: true, text: 'x' }
             },
             y: {
-              title: {
-                display: true,
-                text: 'y'
-              }
+              title: { display: true, text: 'y' }
             }
           }
         }
